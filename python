@@ -1,0 +1,37 @@
+from fastapi import FastAPI
+from pydantic import BaseModel
+import requests
+
+app = FastAPI()
+
+class CNPJQuery(BaseModel):
+    estado: str = None
+    cidade: str = None
+    cnae: str = None
+    telefone_fixo: bool = None
+    telefone_celular: bool = None
+    capital_social: float = None
+    data_abertura: str = None
+    situacao_cadastral: str = None
+
+@app.get("/cnpjs/")
+async def get_cnpjs(query: CNPJQuery):
+    url = "https://api.casadosdados.com.br/v1/cnpj"
+
+    # Construindo parâmetros da consulta com base nos filtros fornecidos
+    params = {}
+    for key, value in query.dict().items():
+        if value is not None:
+            params[key] = value
+
+    # Fazendo solicitação à API de CNPJ
+    response = requests.get(url, params=params)
+
+    if response.status_code == 200:
+        return response.json()
+    else:
+        return {"error": "Erro ao obter dados do CNPJ"}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
